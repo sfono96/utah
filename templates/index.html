@@ -60,11 +60,9 @@
 		var	thead = table.append("thead"),
 			tbody = table.append("tbody");
 
+		var colorScale = d3.scale.linear().domain([0,4]).range(["black","lime"]);
 
-		var colorScale = d3.scale.linear().domain([0,4]).range(["grey","lime"]);
-
-		d3.json("{{url_for('static', filename='utah.json')}}", function(data){
-		//d3.json("utahSchoolDistricts2AddData.json", function(data){				
+		d3.json("{{url_for('static', filename='utah.json')}}", function(data){				
 
 			///////////////////////////////////////////////////////
 			//////////////////// TABLE STUFF //////////////////////
@@ -81,7 +79,7 @@
 			};
 
 			// filtering data function
-			function filter(json){
+			function filter(json,district){
 				// return a 2D array (3 x 3) 1 row for each AMAO (3) & 1 column for each year (3)
 				var dataset = []
 
@@ -96,19 +94,30 @@
 				tmp13a3 = []
 				tmp14a3 = []
 
+				// flag variable - used if there is a filtering district
+				tag = 0
+
 				// if no district then set up 3 arrays 1 for each year and toss in each AMAO 
 				for (i = 0; i < json.length; i++) {
 
-					// add each of the scores to each array
-					tmp12a1.push(json[i]["properties"]["2012"]["K-12"]["AMAO #1"])
-					tmp13a1.push(json[i]["properties"]["2013"]["K-12"]["AMAO #1"])
-					tmp14a1.push(json[i]["properties"]["2014"]["K-12"]["AMAO #1"])
-					tmp12a2.push(json[i]["properties"]["2012"]["K-12"]["AMAO #2"])
-					tmp13a2.push(json[i]["properties"]["2013"]["K-12"]["AMAO #2"])
-					tmp14a2.push(json[i]["properties"]["2014"]["K-12"]["AMAO #2"])
-					tmp12a3.push(json[i]["properties"]["2012"]["K-12"]["AMAO #3"])
-					tmp13a3.push(json[i]["properties"]["2013"]["K-12"]["AMAO #3"])
-					tmp14a3.push(json[i]["properties"]["2014"]["K-12"]["AMAO #3"])
+					// tag if the district is relevant (1 is yes 0 is no)
+					if (!district) {tag = 1}
+					else if (json[i]["properties"]["NAME"] === district) {tag = 1}
+					else {tag = 0}
+
+					if(tag === 1){
+
+						// add each of the scores to each array
+						tmp12a1.push(json[i]["properties"]["2012"]["K-12"]["AMAO #1"])
+						tmp13a1.push(json[i]["properties"]["2013"]["K-12"]["AMAO #1"])
+						tmp14a1.push(json[i]["properties"]["2014"]["K-12"]["AMAO #1"])
+						tmp12a2.push(json[i]["properties"]["2012"]["K-12"]["AMAO #2"])
+						tmp13a2.push(json[i]["properties"]["2013"]["K-12"]["AMAO #2"])
+						tmp14a2.push(json[i]["properties"]["2014"]["K-12"]["AMAO #2"])
+						tmp12a3.push(json[i]["properties"]["2012"]["K-12"]["AMAO #3"])
+						tmp13a3.push(json[i]["properties"]["2013"]["K-12"]["AMAO #3"])
+						tmp14a3.push(json[i]["properties"]["2014"]["K-12"]["AMAO #3"])
+					}
 				}
 
 				// average the arrays and put them into 3, 3 item arrays
@@ -141,12 +150,47 @@
 				return dataset;
 			};
 
+			function colorMeBadd(d,i,j){
+    			if (i !== 0) { // don't color the first column
+			    	if (j === 0) { 			//first AMAO
+			    		if (d >= .45) {
+			    			return "limegreen";
+			    		}
+			    		else {
+			    			return "grey";
+			    		}
+			    	}
+			    	else if (j === 1) { 	// second AMAO
+			    		if(d>=.332) {
+			    			return "limegreen";
+			    		}
+			    		else {
+			    			return "grey";
+			    		}
+			    	}
+		    		else { 					// third AMAO
+		    			if (d >= .52) { 
+		    				return "limegreen";
+		    			}
+		    			else {
+		    				return "grey";
+		    			}
+		    		}
+				}
+		    };
+
+
 			// actual dataset
 			var dset = filter(data.features)
 
 			var hset = [["AMAO","2012","2013","2014 (Predicted)"]]
 
 			function drawTbl(dset,hset){
+				// clear out old
+				thead.selectAll("tr").data([]).exit().remove()
+				tbody.selectAll("tr").data([]).exit().remove()
+
+				// and in with the new
 				thead.selectAll("tr")
 				.data(hset)
 				.enter()
@@ -165,34 +209,27 @@
 						    .style("color","grey")
 						    .style("font-weight","bold");
 
-		    formatter = d3.format(".1%")
+		    	formatter = d3.format(".1%")
 
-			tbody.selectAll("tr")
-				.data(dset)
-				.enter()
-					.append("tr")
-					.selectAll("td")
-						.data(function(d){return d;})
-						.enter()
-							.append("td")
-						    //.style("border", "1px black solid")
-						    .style("padding", "5px")
-						    // .on("mouseover", function(){d3.select(this).style("background-color", "aliceblue")}) 
-						    // .on("mouseout", function(){d3.select(this).style("background-color", "white")}) 
-						    .style("background-color",function(d,i,j){
-						    	if (i !== 0) {
-							    	if (j === 0) {if(d>=.45){return "limegreen";}else{return "grey";}}
-							    	else if (j === 1) {if(d>=.332){return "limegreen";}else{return "grey";}}
-						    		else {if(d>=.52){return "limegreen";}else{return "grey";}}
-						    	}
-						    })
-						    .style("border","solid white")
-						    .text(function(d,i){if(i !== 0){return formatter(d);}else{return d;}})
-						    .style("font-family","arial,helvetica,sans-serif")
-						    .style("color",function(d,i){if (i !== 0){return "white";}else{return "grey";}})
-						    .style("font-weight",function(d,i){if (i !== 0){return "nomral";}else{return "900";}})
-						    .style("text-align","center")
-						    .style("font-size", function(d,i){if (i !== 0){return "24px";}else{return "30px";}});
+				tbody.selectAll("tr")
+					.data(dset)
+					.enter()
+						.append("tr")
+						.selectAll("td")
+							.data(function(d){return d;})
+							.enter()
+								.append("td")
+							    .style("padding", "5px")
+							 //    .on("mouseover", function(){d3.select(this).style("background-color", "aliceblue")}) 
+								// .on("mouseout", function(){d3.select(this).style("background-color", function(d,i,j){return colorMeBadd(d,i,j);});}) 
+							    .style("background-color",function(d,i,j){return colorMeBadd(d,i,j);})
+							    .style("border","solid white")
+							    .text(function(d,i){if(i !== 0){return formatter(d);}else{return d;}})
+							    .style("font-family","arial,helvetica,sans-serif")
+							    .style("color",function(d,i){if (i !== 0){return "white";}else{return "grey";}})
+							    .style("font-weight",function(d,i){if (i !== 0){return "nomral";}else{return "900";}})
+							    .style("text-align","center")
+							    .style("font-size", function(d,i){if (i !== 0){return "24px";}else{return "30px";}});
 		    };
 
 		    drawTbl(dset,hset)
@@ -229,7 +266,7 @@
 			// throw district paths into each group element
 			var areas = group.append("path")
 				.attr("d",path)
-				.attr("fill",function(d){return colorScale(d.properties["2013"]["K-12"]["passed"]);})
+				.attr("fill",function(d){return colorScale(d.properties["2014"]["K-12"]["passed"]);})
 				//.attr("class","feature")
 				.attr("stroke","white")
 				.attr("stroke-width",1)
@@ -267,10 +304,16 @@
 	
 				// areas.attr("class","feature")
 				// 	.classed("active",centered && function(d){return d === centered;});
+				if(centered === d){var dset = filter(data.features,d.properties.NAME)}
+				else{var dset = filter(data.features)}
+
+				drawTbl(dset,hset)
+
 				areas.transition()
 					.duration(1000)
 					.attr("transform", "scale(" + k + ")translate(" + x + "," + y + ")")
 					.attr("stroke-width",1/k + "px");
+				
 			}
 			// function outline(d){		
 			// 	if(d && centered !== d){centered = d;}
