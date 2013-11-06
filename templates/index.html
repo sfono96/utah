@@ -11,17 +11,10 @@
 	<div style = "float: left; position:relative;width:100%;background: white;height: 25px"/></div>
 </head>
 <body>
+	<div id = "utahMap"></div>
+	<div id = "districtName"></div>
+	<div id = "scoreTbl"></div>
 	<style>
-	.feature {
-	  fill: grey;
-	  cursor: pointer;
-	}
-	.feature.active {
-	  fill: limegreen;
-	}
-	.hover {
-	  stroke-width: 3.5px;
-	}
 	.d3-tip {
 	  line-height: 1;
 	  font-family: arial,helvetica,sans-serif;
@@ -30,6 +23,9 @@
 	  background: rgba(0, 0, 0, 0.8);
 	  color: #fff;
 	  border-radius: 2px;
+	}
+	# districtText {
+		color: grey;
 	}
 	</style>
 	<script type="text/javascript">
@@ -42,20 +38,37 @@
 		var path = d3.geo.path()
 			.projection(projection);
 
-		var canvas = d3.select("body").append("svg")
+		var canvas = d3.select("#utahMap").append("svg")
 			.style("margin","0px 0px 0px 25px")
 			.style("float","left")
 			.attr("width",w)
 			.attr("height",h);
 
-		var table = d3.select("body").append("table")
+		var dtext = [{"selected":"All Districts"}]
+
+		var tcanvas = d3.select("#districtName").append("svg")
+			.style("float","left")
+			.style("margin","0 0 0 150px")
+			.attr("transform","translate(0,70)")
+			.attr("width",570)
+			.attr("height",75)
+
+		var text = tcanvas.append("text")
+			.data(dtext)
+			.text(function(d){return d.selected;})
+			.attr("font-size",30)
+			.attr("font-family","arial, helvetica, sans-serif")
+			.attr("color","grey")
+
+
+		var table = d3.select("#scoreTbl").append("table")
 			.style("float","left")
 			.style("width","40%")
 			.style("table-layout","fixed")
 			.style("height","400px")
 		   	.style("border-collapse", "collapse")
     		//.style("border", "2px black solid")
-    		.style("margin","80px 100px 100px 100px");
+    		.style("margin","10px 100px 100px 100px");
 			
 		var	thead = table.append("thead"),
 			tbody = table.append("tbody");
@@ -179,6 +192,25 @@
 				}
 		    };
 
+			function districtName(district){
+				// handle no district
+				if(!district){var dtxt = [{"selected":"All Districts"}]}
+				else{var dtxt=[{"selected":district}]}
+				
+				// remove old
+				tcanvas.selectAll("text").data([]).exit().remove()
+				
+				// setup new
+				tcanvas.append("text")
+					.data(dtxt)
+					.text(function(d){return d.selected;})
+					.attr("font-size",30)
+					.attr("font-family","arial, helvetica, sans-serif")
+					.attr("color","grey")
+			}
+
+			//initial call
+			districtName()
 
 			// actual dataset
 			var dset = filter(data.features)
@@ -304,8 +336,14 @@
 	
 				// areas.attr("class","feature")
 				// 	.classed("active",centered && function(d){return d === centered;});
-				if(centered === d){var dset = filter(data.features,d.properties.NAME)}
-				else{var dset = filter(data.features)}
+				if(centered === d){
+					var dset = filter(data.features,d.properties.NAME)
+					districtName(d.properties.NAME)
+				}
+				else{
+					var dset = filter(data.features)
+					districtName()
+				}
 
 				drawTbl(dset,hset)
 
