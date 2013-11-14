@@ -1,365 +1,370 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>Title III Utah</title>
-	<script src="http://d3js.org/d3.v3.min.js"></script>
-	<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.min.js"></script>
-	<div style = "float: left; position:relative;width:100%;height: 10px"></div>
-	<div style = "float: left; position:relative;width:100%;background: black;height: 5px"></div>
-	<div style = "float: left; position:relative;width:100%;background: black;height: 25px; font-family: arial,helvetica,sans-serif; color: white; font-size: 20px; text-indent: 100px;">Title III Tracking - State of Utah</div>
-	<div style = "float: left; position:relative;width:100%;background: black;height: 5px"></div>
-	<div style = "float: left; position:relative;width:100%;background: white;height: 25px"/></div>
+    <title>Title III Utah</title>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.min.js"></script>
+    <div style = "float: left; position:relative;width:100%;height: 10px"></div>
+    <div style = "float: left; position:relative;width:100%;background: black;height: 5px"></div>
+    <div style = "float: left; position:relative;width:100%;background: black;height: 25px; font-family: arial,helvetica,sans-serif; color: white; font-size: 20px; text-indent: 100px;">Title III Tracking - State of Utah</div>
+    <div style = "float: left; position:relative;width:100%;background: black;height: 5px"></div>
+    <div style = "float: left; position:relative;width:100%;background: white;height: 25px"/></div>
 </head>
 <body>
-	<div id = "utahMap"></div>
-	<div id = "districtName"></div>
-	<div id = "scoreTbl"></div>
-	<style>
-	.d3-tip {
-	  line-height: 1;
-	  font-family: arial,helvetica,sans-serif;
-	  font-weight: bold;
-	  padding: 12px;
-	  background: rgba(0, 0, 0, 0.8);
-	  color: #fff;
-	  border-radius: 2px;
-	}
-	# districtText {
-		color: grey;
-	}
-	</style>
-	<script type="text/javascript">
-		var h = 600, w = 600, centered,active;
+    <div id = "utahMap"></div>
 
-		var projection = d3.geo.mercator()
-			.scale(1)
-			.translate([0,0]);
-		
-		var path = d3.geo.path()
-			.projection(projection);
+    <style>
+    .d3-tip {
+      line-height: 1;
+      font-family: arial,helvetica,sans-serif;
+      font-weight: bold;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      border-radius: 2px;
+    }
+    # districtText {
+        color: grey;
+    }
+    </style>
+    <script type="text/javascript">
+        
+        // map variables
+        var h = 600, w = 600, centered,active,zoomed = false;
 
-		var canvas = d3.select("#utahMap").append("svg")
-			.style("margin","0px 0px 0px 25px")
-			.style("float","left")
-			.attr("width",w)
-			.attr("height",h);
+        var projection = d3.geo.mercator()
+            .scale(1)
+            .translate([0,0]);
+        
+        var path = d3.geo.path()
+            .projection(projection);
 
-		var dtext = [{"selected":"All Districts"}]
+        var canvas = d3.select("#utahMap").append("svg")
+            .style("margin","0px 0px 0px 25px")
+            .style("float","left")
+            .attr("width",w)
+            .attr("height",h);
 
-		var tcanvas = d3.select("#districtName").append("svg")
-			.style("float","left")
-			.style("margin","0 0 0 150px")
-			.attr("transform","translate(0,70)")
-			.attr("width",570)
-			.attr("height",75)
+        // table variables
+        var tcanvas = d3.select("body").append("svg")
+            .style("float","left")
+            .style("margin","0 0 0 50px")
+            .attr("transform","translate(0,0)")
+            .attr("width",700)
+            .attr("height",600)
 
-		var text = tcanvas.append("text")
-			.data(dtext)
-			.text(function(d){return d.selected;})
-			.attr("font-size",30)
-			.attr("font-family","arial, helvetica, sans-serif")
-			.attr("color","grey")
+        var gframe = tcanvas.append("g")
 
+        var colorScale = d3.scale.linear().domain([0,4]).range(["black","lime"]);
 
-		var table = d3.select("#scoreTbl").append("table")
-			.style("float","left")
-			.style("width","40%")
-			.style("table-layout","fixed")
-			.style("height","400px")
-		   	.style("border-collapse", "collapse")
-    		//.style("border", "2px black solid")
-    		.style("margin","10px 100px 100px 100px");
-			
-		var	thead = table.append("thead"),
-			tbody = table.append("tbody");
+        d3.json("utah.json", function(data){              
 
-		var colorScale = d3.scale.linear().domain([0,4]).range(["black","lime"]);
+            ///////////////////////////////////////////////////////
+            //////////////////// TABLE STUFF //////////////////////
+            ///////////////////////////////////////////////////////
 
-		d3.json("{{url_for('static', filename='utah.json')}}", function(data){				
+            // average function for json data aggregation
+            function average(array){
+                var sum = 0
+                len = array.length
+                for(i = 0; i < len; i ++){
+                    sum += array[i];
+                }
+                return sum/len;
+            };
 
-			///////////////////////////////////////////////////////
-			//////////////////// TABLE STUFF //////////////////////
-			///////////////////////////////////////////////////////
+            // filtering data function
+            function filter(json,district){
+                // return a 2D array (3 x 3) 1 row for each AMAO (3) & 1 column for each year (3)
+                var dataset = []
 
-			// average function for json data aggregation
-			function average(array){
-				var sum = 0
-				len = array.length
-				for(i = 0; i < len; i ++){
-					sum += array[i];
-				}
-				return sum/len;
-			};
+                // temp arrays for each year / amao combin
+                tmp12a1 = []
+                tmp13a1 = []
+                tmp14a1 = []
+                tmp12a2 = []
+                tmp13a2 = []
+                tmp14a2 = []
+                tmp12a3 = []
+                tmp13a3 = []
+                tmp14a3 = []
 
-			// filtering data function
-			function filter(json,district){
-				// return a 2D array (3 x 3) 1 row for each AMAO (3) & 1 column for each year (3)
-				var dataset = []
+                // flag variable - used if there is a filtering district
+                tag = 0
 
-				// temp arrays for each year / amao combin
-				tmp12a1 = []
-				tmp13a1 = []
-				tmp14a1 = []
-				tmp12a2 = []
-				tmp13a2 = []
-				tmp14a2 = []
-				tmp12a3 = []
-				tmp13a3 = []
-				tmp14a3 = []
+                // if no district then set up 3 arrays 1 for each year and toss in each AMAO 
+                for (i = 0; i < json.length; i++) {
 
-				// flag variable - used if there is a filtering district
-				tag = 0
+                    // tag if the district is relevant (1 is yes 0 is no)
+                    if (!district) {tag = 1}
+                    else if (json[i]["properties"]["NAME"] === district) {tag = 1}
+                    else {tag = 0}
 
-				// if no district then set up 3 arrays 1 for each year and toss in each AMAO 
-				for (i = 0; i < json.length; i++) {
+                    if(tag === 1){
 
-					// tag if the district is relevant (1 is yes 0 is no)
-					if (!district) {tag = 1}
-					else if (json[i]["properties"]["NAME"] === district) {tag = 1}
-					else {tag = 0}
+                        // add each of the scores to each array
+                        tmp12a1.push(json[i]["properties"]["2012"]["K-12"]["AMAO #1"])
+                        tmp13a1.push(json[i]["properties"]["2013"]["K-12"]["AMAO #1"])
+                        tmp14a1.push(json[i]["properties"]["2014"]["K-12"]["AMAO #1"])
+                        tmp12a2.push(json[i]["properties"]["2012"]["K-12"]["AMAO #2"])
+                        tmp13a2.push(json[i]["properties"]["2013"]["K-12"]["AMAO #2"])
+                        tmp14a2.push(json[i]["properties"]["2014"]["K-12"]["AMAO #2"])
+                        tmp12a3.push(json[i]["properties"]["2012"]["K-12"]["AMAO #3"])
+                        tmp13a3.push(json[i]["properties"]["2013"]["K-12"]["AMAO #3"])
+                        tmp14a3.push(json[i]["properties"]["2014"]["K-12"]["AMAO #3"])
+                    }
+                }
 
-					if(tag === 1){
+                // average the arrays and put them into 3, 3 item arrays
+                tmp1 = []
+                tmp2 = []
+                tmp3 = []
 
-						// add each of the scores to each array
-						tmp12a1.push(json[i]["properties"]["2012"]["K-12"]["AMAO #1"])
-						tmp13a1.push(json[i]["properties"]["2013"]["K-12"]["AMAO #1"])
-						tmp14a1.push(json[i]["properties"]["2014"]["K-12"]["AMAO #1"])
-						tmp12a2.push(json[i]["properties"]["2012"]["K-12"]["AMAO #2"])
-						tmp13a2.push(json[i]["properties"]["2013"]["K-12"]["AMAO #2"])
-						tmp14a2.push(json[i]["properties"]["2014"]["K-12"]["AMAO #2"])
-						tmp12a3.push(json[i]["properties"]["2012"]["K-12"]["AMAO #3"])
-						tmp13a3.push(json[i]["properties"]["2013"]["K-12"]["AMAO #3"])
-						tmp14a3.push(json[i]["properties"]["2014"]["K-12"]["AMAO #3"])
-					}
-				}
+                
+                // AMAO column
+                tmp1.push(1)
+                tmp2.push(2)
+                tmp3.push(3)
+                
+                // average scores
+                tmp1.push(average(tmp12a1))
+                tmp1.push(average(tmp13a1))
+                tmp1.push(average(tmp14a1))
+                tmp2.push(average(tmp12a2))
+                tmp2.push(average(tmp13a2))
+                tmp2.push(average(tmp14a2))
+                tmp3.push(average(tmp12a3))
+                tmp3.push(average(tmp13a3))
+                tmp3.push(average(tmp14a3))
 
-				// average the arrays and put them into 3, 3 item arrays
-				tmp1 = []
-				tmp2 = []
-				tmp3 = []
+                // add tmp1 - tmp3 to the dataset array and return
+                dataset.push(["AMAO","2012","2013","2014"])
+                dataset.push(tmp1)
+                dataset.push(tmp2)
+                dataset.push(tmp3)
 
-				
-				// AMAO column
-				tmp1.push("#1")
-				tmp2.push("#2")
-				tmp3.push("#3")
-				
-				// average scores
-				tmp1.push(average(tmp12a1))
-				tmp1.push(average(tmp13a1))
-				tmp1.push(average(tmp14a1))
-				tmp2.push(average(tmp12a2))
-				tmp2.push(average(tmp13a2))
-				tmp2.push(average(tmp14a2))
-				tmp3.push(average(tmp12a3))
-				tmp3.push(average(tmp13a3))
-				tmp3.push(average(tmp14a3))
+                return dataset;
+            };
 
-				// add tmp1 - tmp3 to the dataset array and return
-				dataset.push(tmp1)
-				dataset.push(tmp2)
-				dataset.push(tmp3)
+            function colorMeBadd(d,i,j){
+                if (i !== 0) { // don't color the first column
+                    if (j === 1) {          //first AMAO
+                        if (d >= .45) {
+                            return "limegreen";
+                        }
+                        else {
+                            return "black";
+                        }
+                    }
+                    else if (j === 2) {     // second AMAO
+                        if(d>=.332) {
+                            return "limegreen";
+                        }
+                        else {
+                            return "black";
+                        }
+                    }
+                    else if (j === 3) {                  // third AMAO
+                        if (d >= .52) { 
+                            return "limegreen";
+                        }
+                        else {
+                            return "black";
+                        }
+                    }
+                    else {return "white"}
+                }
+                else { return "white";}
+            };
 
-				return dataset;
-			};
+            // actual dataset
+            var dset = filter(data.features)
 
-			function colorMeBadd(d,i,j){
-    			if (i !== 0) { // don't color the first column
-			    	if (j === 0) { 			//first AMAO
-			    		if (d >= .45) {
-			    			return "limegreen";
-			    		}
-			    		else {
-			    			return "black";
-			    		}
-			    	}
-			    	else if (j === 1) { 	// second AMAO
-			    		if(d>=.332) {
-			    			return "limegreen";
-			    		}
-			    		else {
-			    			return "black";
-			    		}
-			    	}
-		    		else { 					// third AMAO
-		    			if (d >= .52) { 
-		    				return "limegreen";
-		    			}
-		    			else {
-		    				return "black";
-		    			}
-		    		}
-				}
-		    };
+            function drawTbl(dset,district){
 
-			function districtName(district){
-				// handle no district
-				if(!district){var dtxt = [{"selected":"All Districts"}]}
-				else{var dtxt=[{"selected":district}]}
-				
-				// remove old
-				tcanvas.selectAll("text").data([]).exit().remove()
-				
-				// setup new
-				tcanvas.append("text")
-					.data(dtxt)
-					.text(function(d){return d.selected;})
-					.attr("font-size",30)
-					.attr("font-family","arial, helvetica, sans-serif")
-					.attr("color","grey")
-			}
+                // out with the old data
+                gframe.selectAll("g").data([]).exit().remove()
 
-			//initial call
-			districtName()
+                // rectangle portion
+                var rectrows = gframe.selectAll("g")
+                            .data(dset)
+                            .enter()
+                            .append("g")
+                            .attr("transform",function(d,i){
+                                return "translate(50, " + (102*i+80) + ")";
+                            })
+                // rectangles/cells
+                var rectcells = rectrows.selectAll("rect")
+                                .data(function(d){return d;})
+                                .enter()
+                                .append("rect")
+                                    .attr("width",150)
+                                    .attr("height",102)
+                                    .attr("fill",function(d,i,j){return colorMeBadd(d,i,j)})
+                                    .attr("stroke","white")
+                                    .attr("stroke-width","2.5")
+                                    .attr("x",function(d,i){return i * 150;})
+                                    .attr("fill-opacity","1")
+                                    .on("dblclick",animate)
+                                    .on("mouseover",function(d,i,j){if(i === 0 && j !== 0){d3.select(this).attr("fill","lightgrey")}})
+                                    .on("mouseout",function(d,i,j){if(i === 0 && j !== 0){d3.select(this).attr("fill","white")}});
 
-			// actual dataset
-			var dset = filter(data.features)
+                formatter = d3.format(".1%")
 
-			var hset = [["AMAO","2012","2013","2014 (Predicted)"]]
+                // text     
+                var textrows = rectrows.selectAll("text")
+                                .data(function(d){return d;})
+                                .enter()
+                                    .append("text")
+                                    .attr("x",function(d,i){return i * 150 + 75;})
+                                    .attr("y",58)
+                                    .text(function(d,i,j){ 
+                                                            if (j === 0) {return d;}
+                                                            else {
+                                                                    if(i===0 && j !== 0){return "#"+d;}
+                                                                    else{return formatter(d);}
+                                                                }
+                                                            })
+                                    .style("font-family","arial,helvetica,sans-serif")
+                                    .attr("fill",function(d,i,j){
+                                                                    if (j === 0 && i === 3) {return "limegreen"}
+                                                                    else if (j !== 0 && i !== 0) {return "white";}
+                                                                    else {return "grey";}
+                                                                })
+                                    .style("font-weight",function(d,i,j){if (i !== 0){return "normal";}else{return "900";}})
+                                    //.style("text-align","center")
+                                    .style("text-anchor","middle")
+                                    .style("font-size", function(d,i,j){if (i !== 0 && j !== 0){return "24px";}else{return "26px";}})
+                                    //.on("dblclick",animate);
+                                   
+                
+                // district name stuff
+                if(!district){
+                    var dtxt = [{"selected":"All Districts"}]
+                    console.log("True")
+                    console.log(dtxt)
+                }
+                else{
+                    var dtxt=[{"selected":district}]
+                    console.log("False")
+                    console.log(dtxt)
+                }
 
-			function drawTbl(dset,hset){
-				// clear out old
-				thead.selectAll("tr").data([]).exit().remove()
-				tbody.selectAll("tr").data([]).exit().remove()
+                gframe.append("g")
+                    .attr("transform","translate(80,80)")
+                    .data(dtxt)
+                    .append("text")
+                    .text(function(d){return d.selected;})
+                    .attr("font-size",30)
+                    .attr("font-family","arial, helvetica, sans-serif")
+                    .attr("fill","grey")
 
-				// and in with the new
-				thead.selectAll("tr")
-				.data(hset)
-				.enter()
-					.append("tr")
-					.style("height","75px")
-					.selectAll("td")
-						.data(function(d){return d;})
-						.enter()
-							.append("td")
-						    //.style("border", "1px black solid")
-						    .style("padding", "5px")
-						    .text(function(d){return d;})
-						    .style("font-family","arial,helvetica,sans-serif")
-						    .style("text-align","center")
-						    .style("font-size", "22px")
-						    .style("color","grey")
-						    .style("font-weight","bold");
+            };
 
-		    	formatter = d3.format(".1%")
+            drawTbl(dset)
+            
 
-				tbody.selectAll("tr")
-					.data(dset)
-					.enter()
-						.append("tr")
-						.selectAll("td")
-							.data(function(d){return d;})
-							.enter()
-								.append("td")
-							    .style("padding", "5px")
-							 //    .on("mouseover", function(){d3.select(this).style("background-color", "aliceblue")}) 
-								// .on("mouseout", function(){d3.select(this).style("background-color", function(d,i,j){return colorMeBadd(d,i,j);});}) 
-							    .style("background-color",function(d,i,j){return colorMeBadd(d,i,j);})
-							    .style("border","solid white")
-							    .text(function(d,i){if(i !== 0){return formatter(d);}else{return d;}})
-							    .style("font-family","arial,helvetica,sans-serif")
-							    .style("color",function(d,i){if (i !== 0){return "white";}else{return "grey";}})
-							    .style("font-weight",function(d,i){if (i !== 0){return "nomral";}else{return "900";}})
-							    .style("text-align","center")
-							    .style("font-size", function(d,i){if (i !== 0){return "24px";}else{return "30px";}});
-		    };
+            ///////////////////////////////////////////////////////
+            ////////////////////  MAP STUFF  //////////////////////
+            ///////////////////////////////////////////////////////
 
-		    drawTbl(dset,hset)
-		    
-			///////////////////////////////////////////////////////
-			////////////////////  MAP STUFF  //////////////////////
-			///////////////////////////////////////////////////////
+            // auto scaling
+            var b = path.bounds(data),
+                s = .95 / Math.max((b[1][0] - b[0][0]) / w, (b[1][1] - b[0][1]) / h),
+                t = [(w - s * (b[1][0] + b[0][0])) / 2, (h - s * (b[1][1] + b[0][1])) / 2];
 
-			// auto scaling
-			var b = path.bounds(data),
-    			s = .95 / Math.max((b[1][0] - b[0][0]) / w, (b[1][1] - b[0][1]) / h),
-    			t = [(w - s * (b[1][0] + b[0][0])) / 2, (h - s * (b[1][1] + b[0][1])) / 2];
+            projection
+                .scale(s)
+                .translate(t);
 
-			projection
-				.scale(s)
-				.translate(t);
+            // tooltip
+            var tip = d3.tip()
+              .attr('class', 'd3-tip')
+              .offset([-10, 0])
+              .html(function(d) {
+                return "<strong>" + d.properties.NAME + "</strong><br>Students: " + d.properties.students;
+              });
 
-			// tooltip
-			var tip = d3.tip()
-			  .attr('class', 'd3-tip')
-			  .offset([-10, 0])
-			  .html(function(d) {
-			    return "<strong>" + d.properties.NAME + "</strong><br>Students: " + d.properties.students;
-			  });
+            // create group elements for the district paths
+            var group = canvas.selectAll("g")
+                .data(data.features)
+                .enter()
+                .append("g")
+            
+            group.call(tip);
 
-			// create group elements for the district paths
-			var group = canvas.selectAll("g")
-				.data(data.features)
-				.enter()
-				.append("g")
-			
-			group.call(tip);
+            // throw district paths into each group element
+            var areas = group.append("path")
+                .attr("d",path)
+                .attr("fill",function(d){return colorScale(d.properties["2014"]["K-12"]["passed"]);})
+                //.attr("class","feature")
+                .attr("stroke","white")
+                .attr("stroke-width",1)
+                .on("click",clicked)
+                // .on("mouseover",outline)
+                //.on("mouseout",areas.classed("hover",false))
+                .on("mouseover.tooltip",tip.show)
+                .on("mouseout.tooltip",tip.hide)
 
-			// throw district paths into each group element
-			var areas = group.append("path")
-				.attr("d",path)
-				.attr("fill",function(d){return colorScale(d.properties["2014"]["K-12"]["passed"]);})
-				//.attr("class","feature")
-				.attr("stroke","white")
-				.attr("stroke-width",1)
-				.on("click",clicked)
-				// .on("mouseover",outline)
-				//.on("mouseout",areas.classed("hover",false))
-				.on("mouseover.tooltip",tip.show)
-				.on("mouseout.tooltip",tip.hide)
+            var box = canvas.append("rect")
+                .attr("width",w)
+                .attr("height",h)
+                .attr("fill","none")
+                .attr("stroke","lightgrey")
+                //.style("margin",100);
 
-			var box = canvas.append("rect")
-				.attr("width",w)
-				.attr("height",h)
-				.attr("fill","none")
-				.attr("stroke","lightgrey")
-				//.style("margin",100);
+            // click to center and zoom
+            function clicked(d){
+                var x, y, k;
+        
+                if(d && centered !== d){
+                    var bnd = path.bounds(d);
+                    var centroid = path.centroid(d);
+                    k = .85 / Math.max((bnd[1][0]-bnd[0][0])/w,(bnd[1][1]-bnd[0][1])/h);
+                    x = -centroid[0] + w/(k*2);
+                    y = -centroid[1] + h/(k*2);
+                    centered = d;
+                }
+                else {
+                    x = 0;
+                    y = 0;
+                    k = 1;
+                    centered = null;
+                }
+  
+                if(centered === d){
+                    var dset = filter(data.features,d.properties.NAME)
+                    drawTbl(dset,d.properties.NAME)
+                }
+                else{
+                    var dset = filter(data.features)
+                    drawTbl(dset)
+        
+                }
 
-			// click to center and zoom
-			function clicked(d){
-				var x, y, k;
-		
-				if(d && centered !== d){
-					var bnd = path.bounds(d);
-					var centroid = path.centroid(d);
-					k = .80 / Math.max((bnd[1][0]-bnd[0][0])/w,(bnd[1][1]-bnd[0][1])/h);
-					x = -centroid[0] + w/(k*2);
-					y = -centroid[1] + h/(k*2);
-					centered = d;
-				}
-				else {
-					x = 0;
-					y = 0;
-					k = 1;
-					centered = null;
-				}
-	
-				// areas.attr("class","feature")
-				// 	.classed("active",centered && function(d){return d === centered;});
-				if(centered === d){
-					var dset = filter(data.features,d.properties.NAME)
-					districtName(d.properties.NAME)
-				}
-				else{
-					var dset = filter(data.features)
-					districtName()
-				}
+                areas.transition()
+                    .duration(1000)
+                    .attr("transform", "scale(" + k + ")translate(" + x + "," + y + ")")
+                    .attr("stroke-width",1/k + "px");
+                
+            }
 
-				drawTbl(dset,hset)
+            function animate(){
+                if (zoomed === false) {
+                    gframe.transition().duration(1000).attr("transform","translate(0,-30)scale(.55)")
+                    zoomed = true
+                    //chartFrame.transition().delay(800).attr("stroke-opacity","1").attr("fill-opacity","1")
+                    //chartFrame2.transition().delay(800).attr("stroke-opacity","1").attr("fill-opacity","1")
+                } 
+                else {
+                    gframe.transition().duration(1000).attr("transform","translate(0,0)scale(1)")
+                    zoomed = false
+                    //chartFrame.transition().duration(100).attr("stroke-opacity","0").attr("fill-opacity","0")
+                    //chartFrame2.transition().duration(100).attr("stroke-opacity","0").attr("fill-opacity","0")
+                };
+            };
+        });
 
-				areas.transition()
-					.duration(1000)
-					.attr("transform", "scale(" + k + ")translate(" + x + "," + y + ")")
-					.attr("stroke-width",1/k + "px");
-				
-			}
-			// function outline(d){		
-			// 	if(d && centered !== d){centered = d;}
-			// 	else {centered = null;}
-			// 	areas.classed("hover",centered && function(d){return d === centered;});
-			// }
-		});
-
-	</script>
+    </script>
 </body>
 </html>
