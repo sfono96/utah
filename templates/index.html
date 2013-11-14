@@ -57,7 +57,7 @@
 
         var colorScale = d3.scale.linear().domain([0,4]).range(["black","lime"]);
 
-        d3.json("utah.json", function(data){              
+        d3.json("{{url_for('static', filename='utah.json')}}", function(data){              
 
             ///////////////////////////////////////////////////////
             //////////////////// TABLE STUFF //////////////////////
