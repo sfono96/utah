@@ -2,8 +2,10 @@
 <html>
 <head>
     <title>Title III Utah</title>
-    <script src="http://d3js.org/d3.v3.min.js"></script>
-    <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.min.js"></script>
+    <!--<script src="http://d3js.org/d3.v3.min.js"></script>-->
+    <script type="text/javascript" src="{{url_for('static', filename='d3.v3.min.js')}}"></script>
+    <!--<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.min.js"></script>-->
+    <script type="text/javascript" src="{{url_for('static', filename='d3.tip.min.js')}}"></script>
     <div style = "float: left; position:relative;width:100%;height: 10px"></div>
     <div style = "float: left; position:relative;width:100%;background: black;height: 5px"></div>
     <div style = "float: left; position:relative;width:100%;background: black;height: 25px; font-family: arial,helvetica,sans-serif; color: white; font-size: 20px; text-indent: 100px;">Title III Tracking - State of Utah</div>
@@ -50,7 +52,7 @@
             .style("float","left")
             .style("margin","0 0 0 50px")
             .attr("transform","translate(0,0)")
-            .attr("width",700)
+            .attr("width",800)
             .attr("height",600)
 
         var gframe = tcanvas.append("g")
@@ -58,6 +60,120 @@
         var colorScale = d3.scale.linear().domain([0,4]).range(["black","lime"]);
 
         d3.json("{{url_for('static', filename='utah.json')}}", function(data){              
+
+            ///////////////////////////////////////////////////////
+            ////////////////////  BAR CHARTS  /////////////////////
+            ///////////////////////////////////////////////////////
+
+            var cw = 800
+            var ch = 300
+
+            var chrtCanvas = tcanvas.append("svg")
+                .attr("width",cw)
+                .attr("height",ch)
+                .attr("transform","translate(0,300)")
+
+            var cdata = [.33, .46]
+            // var w = 400
+            // var h = 300
+            var wm = cw/(5)
+
+            var y = d3.scale.linear().domain([0,.70]).range([0,ch])
+            //console.log(y(cdata[0]),y(cdata[1]),y(cdata[2]))
+             
+            var barWidth = 180//w/cdata.length-wm
+
+            var rectangles = chrtCanvas.selectAll("rect")
+                    .data(cdata)
+                    .enter()
+                        .append("rect")
+                        .attr("width",barWidth)
+                        .attr("height",function(d){return y(d)})
+                        .attr("x",function(d,i){
+                                                    if(i === 0){return i*(barWidth+10)+150;}
+                                                    else{return i*(barWidth+10)+250}
+                                                })
+                    .attr("y",function(d,i,j){return ch - y(d);})
+                    .attr("fill",function(d,i){if(i===0){return "grey"}else{return "lightgrey"}})
+                    .attr("fill-opacity","0")
+
+            var target = chrtCanvas.append("line")
+                    .attr("x1",130)
+                    .attr("y1",150)
+                    .attr("x2",346)
+                    .attr("y2",150)
+                    .attr("stroke","olive")
+                    //.attr("fill","tan")
+                    .attr("stroke-opacity","0")
+                    .style("stroke-dasharray",("3,3"))
+                    .attr("stroke-width","3")
+
+            var c1l1 = chrtCanvas.append("circle")
+                    .attr("cx",130)
+                    .attr("cy",150)
+                    .attr("r",4)
+                    .attr("fill","tan")
+                    .attr("stroke","olive")
+                    .attr("fill-opacity","0")
+                    .attr("stroke-opacity","0")
+
+            var c2l1 = chrtCanvas.append("circle")
+                    .attr("cx",346)
+                    .attr("cy",150)
+                    .attr("r",4)
+                    .attr("fill","tan")
+                    .attr("stroke","olive")
+                    .attr("fill-opacity","0")
+                    .attr("stroke-opacity","0")
+
+            var target2 = chrtCanvas.append("line")
+                    .attr("x1",425)
+                    .attr("y1",140)
+                    .attr("x2",636)
+                    .attr("y2",140)
+                    .attr("stroke","olive")
+                    //.attr("fill","tan")
+                    .attr("stroke-opacity","0")
+                    .style("stroke-dasharray",("3,3"))
+                    .attr("stroke-width","3")
+
+            var c1l2 = chrtCanvas.append("circle")
+                    .attr("cx",425)
+                    .attr("cy",140)
+                    .attr("r",4)
+                    .attr("fill","tan")
+                    .attr("stroke","olive")
+                    .attr("fill-opacity","0")
+                    .attr("stroke-opacity","0")
+
+            var c2l2 = chrtCanvas.append("circle")
+                    .attr("cx",636)
+                    .attr("cy",140)
+                    .attr("r",4)
+                    .attr("fill","tan")
+                    .attr("stroke","olive")
+                    .attr("fill-opacity","0")
+                    .attr("stroke-opacity","0")
+
+            var k6 = chrtCanvas.append("text")
+                    .attr("x",215)
+                    .attr("y",50)
+                    .text("K-6")
+                    .style("opacity","0")
+                    .attr("fill","grey")
+                    .style("font-family","Arial")
+                    .style("font-size","30px")
+                    .style("font-weight","bold")
+
+            var sevn12 = chrtCanvas.append("text")
+                    .attr("x",495)
+                    .attr("y",50)
+                    .text("7-12")
+                    .style("opacity","0")
+                    .attr("fill","grey")
+                    .style("font-family","Arial")
+                    .style("font-size","30px")
+                    .style("font-weight","bold")
 
             ///////////////////////////////////////////////////////
             //////////////////// TABLE STUFF //////////////////////
@@ -205,9 +321,9 @@
                                     .attr("stroke-width","2.5")
                                     .attr("x",function(d,i){return i * 150;})
                                     .attr("fill-opacity","1")
-                                    .on("dblclick",animate)
-                                    .on("mouseover",function(d,i,j){if(i === 0 && j !== 0){d3.select(this).attr("fill","lightgrey")}})
-                                    .on("mouseout",function(d,i,j){if(i === 0 && j !== 0){d3.select(this).attr("fill","white")}});
+                                    .on("click",animate)
+                                    .on("mouseover",function(d,i,j){if(i !== 0 && j !== 0){d3.select(this).attr("fill-opacity",".80").attr("stroke-width","4")}})
+                                    .on("mouseout",function(d,i,j){if(i !== 0 && j !== 0){d3.select(this).attr("fill-opacity","1").attr("stroke-width","2.5")}});
 
                 formatter = d3.format(".1%")
 
@@ -231,7 +347,11 @@
                                                                     else if (j !== 0 && i !== 0) {return "white";}
                                                                     else {return "grey";}
                                                                 })
-                                    .style("font-weight",function(d,i,j){if (i !== 0){return "normal";}else{return "900";}})
+                                    .style("font-weight",function(d,i,j){
+                                        if (i === 0){return "900";}
+                                        else if (i === 3 && j === 0){return "900";}
+                                        else {return "normal";}
+                                    })
                                     //.style("text-align","center")
                                     .style("text-anchor","middle")
                                     .style("font-size", function(d,i,j){if (i !== 0 && j !== 0){return "24px";}else{return "26px";}})
@@ -241,13 +361,13 @@
                 // district name stuff
                 if(!district){
                     var dtxt = [{"selected":"All Districts"}]
-                    console.log("True")
-                    console.log(dtxt)
+                    //console.log("True")
+                    //console.log(dtxt)
                 }
                 else{
                     var dtxt=[{"selected":district}]
-                    console.log("False")
-                    console.log(dtxt)
+                    //console.log("False")
+                    //console.log(dtxt)
                 }
 
                 gframe.append("g")
@@ -300,8 +420,10 @@
                 //.attr("class","feature")
                 .attr("stroke","white")
                 .attr("stroke-width",1)
+                .attr("fill-opacity",1)
                 .on("click",clicked)
-                // .on("mouseover",outline)
+                .on("mouseover",function(){d3.select(this).attr("fill-opacity",".85")})
+                .on("mouseout",function(){d3.select(this).attr("fill-opacity","1")})
                 //.on("mouseout",areas.classed("hover",false))
                 .on("mouseover.tooltip",tip.show)
                 .on("mouseout.tooltip",tip.hide)
@@ -312,6 +434,10 @@
                 .attr("fill","none")
                 .attr("stroke","lightgrey")
                 //.style("margin",100);
+
+            //////////////////////////////////////
+            /////////////// ACTIONS //////////////
+            //////////////////////////////////////
 
             // click to center and zoom
             function clicked(d){
@@ -343,7 +469,7 @@
                 }
 
                 areas.transition()
-                    .duration(1000)
+                    .duration(700)
                     .attr("transform", "scale(" + k + ")translate(" + x + "," + y + ")")
                     .attr("stroke-width",1/k + "px");
                 
@@ -351,13 +477,31 @@
 
             function animate(){
                 if (zoomed === false) {
-                    gframe.transition().duration(1000).attr("transform","translate(0,-30)scale(.55)")
+                    gframe.transition().duration(700).attr("transform","translate(0,-30)scale(.60)")
                     zoomed = true
+                    rectangles.transition().duration(300).delay(200).attr("fill-opacity","1")
+                    target.transition().duration(300).delay(400).attr("stroke-opacity","1")
+                    target2.transition().duration(300).delay(400).attr("stroke-opacity","1")
+                    k6.transition().duration(300).delay(400).style("opacity","1")
+                    sevn12.transition().duration(300).delay(400).style("opacity","1")
+                    c1l1.transition().duration(300).delay(400).attr("stroke-opacity","1").attr("fill-opacity","1")
+                    c2l1.transition().duration(300).delay(400).attr("stroke-opacity","1").attr("fill-opacity","1")
+                    c1l2.transition().duration(300).delay(400).attr("stroke-opacity","1").attr("fill-opacity","1")
+                    c2l2.transition().duration(300).delay(400).attr("stroke-opacity","1").attr("fill-opacity","1")
                     //chartFrame.transition().delay(800).attr("stroke-opacity","1").attr("fill-opacity","1")
                     //chartFrame2.transition().delay(800).attr("stroke-opacity","1").attr("fill-opacity","1")
                 } 
                 else {
-                    gframe.transition().duration(1000).attr("transform","translate(0,0)scale(1)")
+                    gframe.transition().duration(700).attr("transform","translate(0,0)scale(1)")
+                    rectangles.attr("fill-opacity","0")
+                    target.attr("stroke-opacity","0")
+                    target2.attr("stroke-opacity","0")
+                    k6.style("opacity","0")
+                    sevn12.style("opacity","0")
+                    c1l1.attr("stroke-opacity","0").attr("fill-opacity","0")
+                    c2l1.attr("stroke-opacity","0").attr("fill-opacity","0")
+                    c1l2.attr("stroke-opacity","0").attr("fill-opacity","0")
+                    c2l2.attr("stroke-opacity","0").attr("fill-opacity","0")
                     zoomed = false
                     //chartFrame.transition().duration(100).attr("stroke-opacity","0").attr("fill-opacity","0")
                     //chartFrame2.transition().duration(100).attr("stroke-opacity","0").attr("fill-opacity","0")
