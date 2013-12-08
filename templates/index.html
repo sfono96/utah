@@ -9,6 +9,9 @@
     <script type="text/javascript" src="{{url_for('static', filename='trackinghelper.js')}}"></script>
     <script src="http://dimplejs.org/dist/dimple.v1.min.js"></script>
     <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+    <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+    <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
     <div style = "float: left; position:relative;width:100%;height: 10px"></div>
     <div style = "float: left; position:relative;width:100%;background: black;height: 5px"></div>
     <div style = "float: left; position:relative;width:100%;background: black;height: 25px; font-family: arial,helvetica,sans-serif; color: white; font-size: 20px; text-indent: 100px;">Title III Tracking - State of Utah</div>
@@ -28,7 +31,14 @@
 # districtText {
     color: grey;
 }
+# listen .fontChg {font-family: Roboto};
 </style>
+
+<div id="listen"></div>
+<div id="speak"></div>
+<div id="read"></div>
+<div id="write"></div>
+
 <script type="text/javascript">
         
 // map area variables
@@ -81,27 +91,27 @@ d3.json("{{url_for('static', filename='utah.json')}}", function(data){
     //////// Chart A moving to destination 1 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     var aData = filter(data.features)
 
-    var ax = tblw*.05//20//w * aMargins // indent in by margin % of width
-    var ay = tblh*.05//20//h * aMargins // indent in by margin % of height
-    var aw = tblw*(.9)//690//w - (2*aMargins*w) // half the width of the main canvas
-    var ah = tblh*.9//550//h - (2*aMargins*h)  // half the height of the main canvas
+    ax = tblw*.05//20//w * aMargins // indent in by margin % of width
+    ay = tblh*.05//20//h * aMargins // indent in by margin % of height
+    aw = tblw*(.9)//690//w - (2*aMargins*w) // half the width of the main canvas
+    ah = tblh*.9//550//h - (2*aMargins*h)  // half the height of the main canvas
 
     // remember that when you scale the object each unit in the coordinate space scales at the same rate SO ADJUST
-    var a_1scale = (tblw/3) / tblw
-    var a_1transx = -ax * a_1scale // adjusting for the scale plus
-    var a_1transy = -ay * a_1scale // adjusting for the scale plus
+    asx = (tblw/3) / tblw
+    atx = -ax * asx // adjusting for the scale plus
+    aty = -ay * asx // adjusting for the scale plus
 
-    var aSvg = tcanvas.append("svg")
+    aSvg = tcanvas.append("svg")
                 .attr("x",ax)
                 .attr("y",ay)    
                 .attr("width",aw)
                 .attr("height",ah)
                 .attr("class","zoomedOut")
-                .on("click",function(d){
+/*                .on("click",function(d){
                                         transformIt(d3.select(this),a_1transx,a_1transy,a_1scale,a_1scale);
                                         appearance("b1Chrt",b1svg,b1data,"K - 6","line");
                                         appearance("b2Chrt",b2svg,b2data,"7 - 12","line");
-                                    })
+                                    })*/
 
     drawTblA(aSvg,aData,ah,aw)
 
@@ -118,7 +128,7 @@ d3.json("{{url_for('static', filename='utah.json')}}", function(data){
     var b1_2transX = tblw/3
     var b1_2transY = -b1y *  b1_2scaleX // just use the same scale as X so the proportions looks the same
 
-    var b1svg = tcanvas.append("svg")
+    b1svg = tcanvas.append("svg")
                 .attr("x",b1x)
                 .attr("y",b1y)
                 .attr("width",b1w)
@@ -131,7 +141,7 @@ d3.json("{{url_for('static', filename='utah.json')}}", function(data){
                                         appearance("cChrt",csvg,cdata,"Performance By Grade","bar");
                                     })
 
-    var b1data = [
+    b1data = [
         {"Type":"Actual","Year":2012,"Score":.20},
         {"Type":"Actual","Year":2013,"Score":.30},
         {"Type":"Actual","Year":2014,"Score":.50},
@@ -154,7 +164,7 @@ d3.json("{{url_for('static', filename='utah.json')}}", function(data){
     var b2_2transX = 0
     var b2_2transY = -b2y * b2_2scaleX // adjusting for the scale plus give a little buffer
 
-    var b2svg = tcanvas.append("svg")
+    b2svg = tcanvas.append("svg")
                 .attr("x",b2x)
                 .attr("y",b2y)
                 .attr("width",b2w)
@@ -169,7 +179,7 @@ d3.json("{{url_for('static', filename='utah.json')}}", function(data){
                                         appearance("cChrt",csvg,cdata,"Performance By Grade","bar");
                                     })
 
-    var b2data = [
+    b2data = [
         {"Type":"Actual","Year":2012,"Score":.25},
         {"Type":"Actual","Year":2013,"Score":.32},
         {"Type":"Actual","Year":2014,"Score":.38},
@@ -190,7 +200,7 @@ d3.json("{{url_for('static', filename='utah.json')}}", function(data){
     var c3transx = tblw/3 + 185// ( bscale * .95 ) // adjusting for the scale plus give a little buffer
     var c3transy = -cy * c3scale + 15 // adjusting for the scale plus give a little buffer
 
-    var csvg = tcanvas.append("svg")
+    csvg = tcanvas.append("svg")
                 .attr("x",cx)
                 .attr("y",cy)
                 .attr("width",cw)
@@ -202,7 +212,7 @@ d3.json("{{url_for('static', filename='utah.json')}}", function(data){
                                         tblAppearance(dsvg,dData);
                                     })
 
-    var cdata = [
+    cdata = [
         {"Grade":"K","Score":.20},
         {"Grade":"1","Score":.30},
         {"Grade":"2","Score":.50},
@@ -219,14 +229,14 @@ d3.json("{{url_for('static', filename='utah.json')}}", function(data){
     var dw = tblw
     var dh = tblh * .55
 
-    var dsvg = tcanvas.append("svg")
+    dsvg = tcanvas.append("svg")
                 .attr("x",dx)
                 .attr("y",dy)
                 .attr("width",dw)
                 .attr("height",dh)
                 .classed("notAppearing",true)
 
-    var dData = [
+    dData = [
         ["Teacher","Students","PASS","L","S","R","W"],
         ["Mr. Gonzalez",12,.5,.3,.35,.75,.70],
         ["Mr. Johnson",10,.55,.32,.33,.78,.71],
