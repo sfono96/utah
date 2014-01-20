@@ -31,7 +31,7 @@ def logout():
 def log():
 	error = None
 	if request.method == 'POST':
-		if request.form['uid'] != 'admin' or request.form['pwd'] != 'fateahu77':
+		if request.form['uid'] != 'admin' or request.form['pwd'] != 'orale78':
 			error = 'Invalid Credentials. Please try again.'
 			flash(error)
 			return redirect(url_for('log'))
