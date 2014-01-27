@@ -266,7 +266,7 @@ function drawTblA(tableSvg,tableData,svgHeight,svgWidth){
                     .attr("class","notClicked")
                     .attr("transform",function(d,i){if(i===0){return "translate(0,0)";}else{return "translate("+(i*colnWidth)+",0)";}})
                     //.attr("x",function(d,i){if(i===0){return 0}else{return i * colnWidth;}})
-                    .on("click",function(d,i,j){if(i===0&&j!==0){
+                    .on("click",function(d,i,j){if(i===0&&j!==0&&b1svg.classed("zoomedOut")&&b2svg.classed("zoomedOut")){
                                         transformIt(tableSvg,atx,aty,asx,asx);
                                         AMAOClick(d3.select(this));
                                         appearance("b1Chrt",b1svg,b1data,"K - 6","line");
@@ -324,9 +324,9 @@ function drawTblA(tableSvg,tableData,svgHeight,svgWidth){
                         .text(function(d,i,j){if(i>bIdxStart-1 && j !== 0){return formatter(d);}else{return d;}})
                         .style("font-family","Roboto,arial,helvetica,sans-serif")
                         .attr("fill",function(d,i,j){if(j!==0&&i>bIdxStart-1){return "white";}else if(j===0&&i===3){return "limegreen";}else{return "grey";}})
-                        .style("font-weight",function(d,i,j){if (i !== 0 && j !== 0){return "normal";}else{return "900";}})
+                        .style("font-weight",function(d,i,j){if (i !== 0 && j !== 0){return "normal";}else if(j===0&&i===3){return "900"}else{return "bold";}})
                         .style("text-anchor","middle")
-                        .style("font-size", function(d,i,j){if (i !== 0 && j !== 0){return "30px";}else{return "35px";}})
+                        .style("font-size", function(d,i,j){if (i !== 0 && j !== 0){return "30px";}else if(j===0&&i===3){return "37px"}else{return "35px";}})
 
 
 };

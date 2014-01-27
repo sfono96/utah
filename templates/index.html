@@ -2,16 +2,25 @@
 <html>
 <head>
     <title>Title III Utah</title>
-    <!--<script src="http://d3js.org/d3.v3.min.js"></script>-->
-    <script type="text/javascript" src="{{url_for('static', filename='d3.v3.min.js')}}"></script>
-    <!--<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.min.js"></script>-->
-    <script type="text/javascript" src="{{url_for('static', filename='d3.tip.min.js')}}"></script>
-    <script type="text/javascript" src="{{url_for('static', filename='trackinghelper.js')}}"></script>
+    <!--
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.min.js"></script>
     <script src="http://dimplejs.org/dist/dimple.v1.min.js"></script>
-    <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
     <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
     <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+    -->
+
+    <script type="text/javascript" src="{{url_for('static', filename='d3.v3.min.js')}}"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='d3.tip.min.js')}}"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='dimple.v1.1.2.min.js')}}"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='jquery-1.9.1.js')}}"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='jquery-ui.js')}}"></script>
+    <link rel="stylesheet" href="{{url_for('static', filename='jquery-ui.css')}}"></script>
+
+    <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+    <script type="text/javascript" src="{{url_for('static', filename='trackinghelper.js')}}"></script>
+    
     <div style = "float: left; position:relative;width:100%;height: 10px"></div>
     <div style = "float: left; position:relative;width:100%;background: black;height: 5px"></div>
     <div style = "float: left; position:relative;width:100%;background: black;height: 25px; font-family: arial,helvetica,sans-serif; color: white; font-size: 20px; text-indent: 100px;">Title III Tracking - State of Utah<a href='/logout' style="font-family: roboto; font-size: 10px;color: white; float:right; margin: 5px 10px 0px 0px">logout</a></div>
@@ -65,7 +74,7 @@ var canvas = d3.select("body").append("svg")
     .attr("height",h);
 
 // table/chart area variables
-var tblw = 830, tblh = 600
+tblw = 830, tblh = 600
 var tcanvas = d3.select("body").append("svg")
     .style("float","left")
     .style("margin","-50px 0 0 20px")
@@ -135,10 +144,11 @@ d3.json("{{url_for('static', filename='utah.json')}}", function(data){
                 .attr("height",b1h)
                 .classed("zoomedOut",true)
                 .classed("notAppearing",true)
-                .on("click",function(d){
-                                        transformIt(d3.select(this),b1_2transX,b1_2transY,b1_2scaleX,b1_2scaleX);
-                                        appearance("b2Chrt",b2svg,b2data,"7 - 12","line");
-                                        appearance("cChrt",csvg,cdata,"Performance By Grade","bar");
+                .on("click",function(d){if(csvg.classed("zoomedOut")){
+                                            transformIt(d3.select(this),b1_2transX,b1_2transY,b1_2scaleX,b1_2scaleX);
+                                            appearance("b2Chrt",b2svg,b2data,"7 - 12","line");
+                                            appearance("cChrt",csvg,cdata,"Performance By Grade","bar");
+                                        }
                                     })
 
     b1data = [
@@ -173,10 +183,11 @@ d3.json("{{url_for('static', filename='utah.json')}}", function(data){
                 .classed("notAppearing",true)
                 .attr("fill-opacity","1")
                 //.on("click",function(d){transformIt(d3.select(this),b2_2transX,b2_2transY,b2_2scaleX,b2_2scaleX); appearance(b1Chrt,cChrt);})
-                .on("click",function(d){
-                                        transformIt(d3.select(this),b2_2transX,b2_2transY,b2_2scaleX,b2_2scaleX);
-                                        appearance("b1Chrt",b1svg,b1data,"K - 6","line");
-                                        appearance("cChrt",csvg,cdata,"Performance By Grade","bar");
+                .on("click",function(d){if(csvg.classed("zoomedOut")){
+                                            transformIt(d3.select(this),b2_2transX,b2_2transY,b2_2scaleX,b2_2scaleX);
+                                            appearance("b1Chrt",b1svg,b1data,"K - 6","line");
+                                            appearance("cChrt",csvg,cdata,"Performance By Grade","bar");
+                                        }
                                     })
 
     b2data = [
