@@ -45,6 +45,11 @@ def log():
 def home():
 	return render_template('index.html')
 
+@app.route('/student')
+@login_required
+def student():
+	return render_template('studentv2.html')
+
 ##################### run #####################
 
 if __name__ == "__main__":

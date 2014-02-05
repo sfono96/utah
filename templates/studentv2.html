@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<HTML>
+<head>
+<!--<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+<link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'> -->
+<script type="text/javascript" src="{{url_for('static', filename='d3.v3.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='d3.tip.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='dimple.v1.1.2.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='jquery-1.9.1.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='jquery-ui.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='colorBrewer.js')}}"></script>
+<link rel="stylesheet" href="{{url_for('static', filename='jquery-ui.css')}}"></script>
+<script src="/static/studentHelper.js" charset="utf-8"></script>
+<script type="text/javascript" src="{{url_for('static', filename='studentHelperv2.js')}}"></script>
+<style type="text/css">
+.axis {font-family: Roboto,Arial; font-size:26px;}
+.axis path, .axis line {fill: none;stroke: #000;shape-rendering: crispEdges;}
+.myText {shape-rendering: crispEdges;font-family: Roboto; font-size: 16px}
+.d3-tip {
+  line-height: 1;
+  font-family: arial,helvetica,sans-serif;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 2px;
+}
+</style>
+<title>d3 chart practice</title>
+<div style = "float: left; position:relative;width:100%;height: 10px"></div>
+<div style = "float: left; position:relative;width:100%;background: black;height: 5px"></div>
+<div style = "float: left; position:relative;width:100%;background: black;height: 25px; font-family: arial,helvetica,sans-serif; color: white; font-size: 20px; text-indent: 100px;">Title III Tracking - State of Utah<a href='/logout' style="font-family: roboto; font-size: 10px;color: white; float:right; margin: 5px 10px 0px 0px">logout</a></div>
+<div style = "float: left; position:relative;width:100%;background: black;height: 5px"></div>
+<div style = "float: left; position:relative;width:100%;background: white;height: 25px"/></div>
+</head>
+<body>
+
+<div id="title" style="float: left; font-family: Roboto, Arial; margin: 0px 50px -40px 10px"><h4>Student History</h4></div>
+<div id="student" style="float: left; font-family: Roboto, Arial; clear:both;margin: 0px 50px -10px 10px; color: steelblue"><h3>Jorge Barajas</h3></div>
+<div id="filters" style="float: left; font-family: Roboto,  Arial;clear:both; margin: 0px 50px 0px 10px">
+    <div style="font-size:11px; margin-bottom: -15px">Peers&nbsp&nbsp|&nbsp&nbspStudent</div><br>
+    &nbsp<input type="checkbox" value="ualpaRng" onchange="clickIt()"/>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<input type="checkbox" value="ualpa" onchange="clickIt()"><label>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbspUALPA</label></input><br>
+    &nbsp<input type="checkbox" value="crtlaRng" onchange="clickIt()"/>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<input type="checkbox" value="crtla" onclick="clickIt()"><label>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbspCRT-LA</label></input><br>
+    &nbsp<input type="checkbox" value="crtmaRng" onchange="clickIt()"/>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<input type="checkbox" value="crtma" onclick="clickIt()"><label>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbspCRT-MA</label></input><br>
+    &nbsp<input type="checkbox" value="gpaRng" onchange="clickIt()"/>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<input type="checkbox" value="gpa" onclick="clickIt()"><label>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbspGrades</label></input><br>
+    &nbsp<input type="checkbox" value="attendanceRng" onchange="clickIt()"/>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<input type="checkbox" value="attendance" onclick="clickIt()"><label>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbspAttendance</label></input><br>
+</div>
+<div id="legend" style="float:left;margin-top:24px;margin-left:-30px;margin-right:50px">
+    <div style="width:14px;height:14px;background-color:steelblue;"/><br>
+    <div style="width:14px;height:14px;background-color:grey;margin-top:2.5px;"/><br>
+    <div style="width:14px;height:14px;background-color:green;margin-top:2.5px;"/><br>
+    <div style="width:14px;height:14px;background-color:gold;margin-top:2.5px;"/><br>
+    <div style="width:14px;height:14px;background-color:orange;margin-top:2.5px;"/><br>
+</div>
+<script type="text/javascript">
+
+// dimensions
+var margins = {top: 30, bottom: 30, left: 50, right: 50},
+    width = 900, height = 600;
+
+// main chart canvas
+motherShip = d3.select("body").append("svg").attr("height",height).attr("width",width);
+//motherShip.append("rect").attr("height",height).attr("width",width).attr("fill","none").attr("stroke","black");
+
+// series
+var ualpa = {},crtla = {},crtma = {},gpa = {},attendance = {}
+ualpa.History = [[{"x":2011,"y":2,"p":45},{"x":2012,"y":2,"p":40},{"x":2013,"y":3,"p":55}]]
+crtla.History = [[{"x":2011,"y":155,"p":45},{"x":2012,"y":157,"p":41},{"x":2013,"y":162,"p":51}]]
+crtma.History = [[{"x":2011,"y":165,"p":45},{"x":2012,"y":169,"p":41},{"x":2013,"y":170,"p":51}]]
+gpa.History = [[{"x":2011,"y":1.92,"p":45},{"x":2012,"y":2.08,"p":41},{"x":2013,"y":2.93,"p":51}]]
+attendance.History = [[{"x":2011,"y":.80,"p":45},{"x":2012,"y":.82,"p":41},{"x":2013,"y":.91,"p":51}]]
+
+// range series
+var ualpaRng = {},crtlaRng = {},crtmaRng = {},gpaRng = {},attendanceRng = {}
+ualpaRng.History = [[{"x":2011,"y":1.9,"p":40,"q":"Average"},{"x":2012,"y":2.2,"p":40,"q":"Average"},{"x":2013,"y":2.3,"p":40,"q":"Average"}],
+                    [{"x":2011,"y":2.6,"p":40,"q":"Upper"},{"x":2012,"y":2.8,"p":40,"q":"Upper"},{"x":2013,"y":3.1,"p":40,"q":"Upper"}],
+                    [{"x":2011,"y":1.3,"p":40,"q":"Lower"},{"x":2012,"y":1.6,"p":40,"q":"Lower"},{"x":2013,"y":1.7,"p":40,"q":"Lower"}]]
+crtlaRng.History = [[{"x":2011,"y":156.3,"p":40,"q":"Average"},{"x":2012,"y":157.9,"p":40,"q":"Average"},{"x":2013,"y":161.2,"p":40,"q":"Average"}],
+                    [{"x":2011,"y":157.3,"p":40,"q":"Upper"},{"x":2012,"y":158.9,"p":40,"q":"Upper"},{"x":2013,"y":165.2,"p":40,"q":"Upper"}],
+                    [{"x":2011,"y":155.3,"p":40,"q":"Lower"},{"x":2012,"y":156.9,"p":40,"q":"Lower"},{"x":2013,"y":157.2,"p":40,"q":"Lower"}]]
+crtmaRng.History = [[{"x":2011,"y":165,"p":45,"q":"Average"},{"x":2012,"y":169,"p":41,"q":"Average"},{"x":2013,"y":170,"p":51,"q":"Average"}]]
+gpaRng.History = [[{"x":2011,"y":1.92,"p":45},{"x":2012,"y":2.08,"p":41},{"x":2013,"y":2.93,"p":51}]]
+attendanceRng.History = [[{"x":2011,"y":.80,"p":45},{"x":2012,"y":.82,"p":41},{"x":2013,"y":.91,"p":51}]]
+
+
+//ualpa.seriesName = "ualpa",crtla.seriesName = "crtla"
+ualpa.yDomain = [0,5], crtla.yDomain = [150,180],crtma.yDomain = [150,180],gpa.yDomain = [0,4],attendance.yDomain = [.5,1]
+ualpaRng.yDomain = [0,5], crtlaRng.yDomain = [150,180],crtmaRng.yDomain = [150,180],gpaRng.yDomain = [0,4],attendanceRng.yDomain = [.5,1]
+ualpa.color = "steelblue",crtla.color = "grey",crtma.color = "green",gpa.color = "gold",attendance.color = "orange"
+ualpaRng.color = "#E0E0E0",crtlaRng.color = "lightgrey",crtmaRng.color = "lightgrey",gpaRng.color = "lightgrey",attendanceRng.color = "lightgrey"
+
+// master x axis
+xScale = d3.scale.ordinal().domain([2011,2012,2013]).rangeBands([margins.left,width-margins.right])
+
+
+xAxis = d3.svg.axis().scale(xScale).orient("top")
+motherShip.append("g").attr("class","x axis").attr("transform","translate(0,"+(margins.top)+")").call(xAxis); 
+
+
+clickIt()
+
+// transition function
+function clickIt(){
+    
+    var temp = {"ualpa":ualpa,"crtla":crtla,"crtma":crtma,"gpa":gpa,"attendance":attendance,"ualpaRng":ualpaRng,"crtlaRng":crtlaRng,"crtmaRng":crtmaRng,"gpaRng":gpaRng,"attendanceRng":attendanceRng},i;
+    var newChecked = checkItOut() // get latest checklist    
+    var keys = Object.keys(temp)
+    // remove old
+    for(i=0;i<keys.length;i++){
+        if(temp[keys[i]].lines){temp[keys[i]].lines.remove();}
+    }
+    // add new
+    for(i=0;i<newChecked.length;i++){
+        var chart = temp[newChecked[i]];
+        drawLineChart(chart) // stall the rendering
+    }
+}
+
+</script>
+</body>
+</HTML>    
