@@ -43,12 +43,14 @@ function transformIt(chartObj,transX,transY,transScaleX,transScaleY) {
         chartObj.transition().duration(700)
                 .attr("transform","translate(" + transX + "," + transY + ")scale(" + transScaleX + "," + transScaleY + ")")
         chartObj.classed("zoomedOut",false)
+        chartObj.classed("")
     }
     // move it back
     else {
         chartObj.transition().duration(700)
                 .attr("transform","translate(0,0)scale(1)")
         chartObj.classed("zoomedOut",true)
+        chartObj.classed("",false)
     }
 }
 
@@ -92,8 +94,8 @@ function createBarChart(chartName, chartSvg, chartData, chartTitle) {
     y.tickFormat = "%";
     y.showGridlines = false;
     s = chartName.addSeries(null, dimple.plot.bar);
-    s.addEventHandler("mouseover",function(e){if(csvg.classed("zoomedOut")){e.selectedShape.attr("fill-opacity",".3")}})
-    s.addEventHandler("mouseout",function(e){if(csvg.classed("zoomedOut")){e.selectedShape.attr("fill-opacity","1")}})
+    s.addEventHandler("mouseover",function(e){if(cg.classed("zoomedOut")){e.selectedShape.attr("fill-opacity",".3")}})
+    s.addEventHandler("mouseout",function(e){if(cg.classed("zoomedOut")){e.selectedShape.attr("fill-opacity","1")}})
     s.addEventHandler("click",function(e){
         if(e.selectedShape.classed("clicked")){
             e.selectedShape
@@ -266,7 +268,7 @@ function drawTblA(tableSvg,tableData,svgHeight,svgWidth){
                     .attr("class","notClicked")
                     .attr("transform",function(d,i){if(i===0){return "translate(0,0)";}else{return "translate("+(i*colnWidth)+",0)";}})
                     //.attr("x",function(d,i){if(i===0){return 0}else{return i * colnWidth;}})
-                    .on("click",function(d,i,j){if(i===0&&j!==0&&b1svg.classed("zoomedOut")&&b2svg.classed("zoomedOut")){
+                    .on("click",function(d,i,j){if(i===0&&j!==0&&b1g.classed("zoomedOut")&&b1g.classed("zoomedOut")){
                                         transformIt(tableSvg,atx,aty,asx,asx);
                                         AMAOClick(d3.select(this));
                                         appearance("b1Chrt",b1svg,b1data,"K - 6","line");

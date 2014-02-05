@@ -2,8 +2,9 @@
 <html>
 <head>
     <title>Title III Utah</title>
-    <!--
+
     <script src="http://d3js.org/d3.v3.min.js"></script>
+    <!--
     <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.min.js"></script>
     <script src="http://dimplejs.org/dist/dimple.v1.min.js"></script>
     <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
@@ -11,7 +12,7 @@
     <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
     -->
 
-    <script type="text/javascript" src="{{url_for('static', filename='d3.v3.min.js')}}"></script>
+    <!--<script type="text/javascript" src="{{url_for('static', filename='d3.v3.min.js')}}"></script>-->
     <script type="text/javascript" src="{{url_for('static', filename='d3.tip.min.js')}}"></script>
     <script type="text/javascript" src="{{url_for('static', filename='dimple.v1.1.2.min.js')}}"></script>
     <script type="text/javascript" src="{{url_for('static', filename='jquery-1.9.1.js')}}"></script>
@@ -98,7 +99,7 @@ var colorScale = d3.scale.linear().domain([0,4]).range(["black","lime"]);
 d3.json("{{url_for('static', filename='utah.json')}}", function(data){              
 
     //////// Chart A moving to destination 1 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    var aData = filter(data.features)
+    var aData = filter(data.features);
 
     ax = tblw*.05//20//w * aMargins // indent in by margin % of width
     ay = tblh*.05//20//h * aMargins // indent in by margin % of height
@@ -110,7 +111,7 @@ d3.json("{{url_for('static', filename='utah.json')}}", function(data){
     atx = -ax * asx // adjusting for the scale plus
     aty = -ay * asx // adjusting for the scale plus
 
-    aSvg = tcanvas.append("svg")
+    aSvg = tcanvas.append("g")
                 .attr("x",ax)
                 .attr("y",ay)    
                 .attr("width",aw)
@@ -137,20 +138,23 @@ d3.json("{{url_for('static', filename='utah.json')}}", function(data){
     var b1_2transX = tblw/3
     var b1_2transY = -b1y *  b1_2scaleX // just use the same scale as X so the proportions looks the same
 
-    b1svg = tcanvas.append("svg")
+    b1g = tcanvas.append("g")
+                .classed("zoomedOut",true)
+                .classed("notAppearing",true)
+    b1svg = b1g.append("svg")
                 .attr("x",b1x)
                 .attr("y",b1y)
                 .attr("width",b1w)
                 .attr("height",b1h)
                 .classed("zoomedOut",true)
                 .classed("notAppearing",true)
-                .on("click",function(d){if(csvg.classed("zoomedOut")){
-                                            transformIt(d3.select(this),b1_2transX,b1_2transY,b1_2scaleX,b1_2scaleX);
+                //.append("g")
+                .on("click",function(d){if(cg.classed("zoomedOut")){
+                                            transformIt(b1g,b1_2transX,b1_2transY,b1_2scaleX,b1_2scaleX);
                                             appearance("b2Chrt",b2svg,b2data,"7 - 12","line");
                                             appearance("cChrt",csvg,cdata,"Performance By Grade","bar");
                                         }
                                     })
-
     b1data = [
         {"Type":"Actual","Year":2012,"Score":.20},
         {"Type":"Actual","Year":2013,"Score":.30},
@@ -174,7 +178,10 @@ d3.json("{{url_for('static', filename='utah.json')}}", function(data){
     var b2_2transX = 0
     var b2_2transY = -b2y * b2_2scaleX // adjusting for the scale plus give a little buffer
 
-    b2svg = tcanvas.append("svg")
+    b2g = tcanvas.append("g")
+                .classed("zoomedOut",true)
+                .classed("notAppearing",true)
+    b2svg = b2g.append("svg")
                 .attr("x",b2x)
                 .attr("y",b2y)
                 .attr("width",b2w)
@@ -183,8 +190,8 @@ d3.json("{{url_for('static', filename='utah.json')}}", function(data){
                 .classed("notAppearing",true)
                 .attr("fill-opacity","1")
                 //.on("click",function(d){transformIt(d3.select(this),b2_2transX,b2_2transY,b2_2scaleX,b2_2scaleX); appearance(b1Chrt,cChrt);})
-                .on("click",function(d){if(csvg.classed("zoomedOut")){
-                                            transformIt(d3.select(this),b2_2transX,b2_2transY,b2_2scaleX,b2_2scaleX);
+                .on("click",function(d){if(cg.classed("zoomedOut")){
+                                            transformIt(b2g,b2_2transX,b2_2transY,b2_2scaleX,b2_2scaleX);
                                             appearance("b1Chrt",b1svg,b1data,"K - 6","line");
                                             appearance("cChrt",csvg,cdata,"Performance By Grade","bar");
                                         }
@@ -211,7 +218,10 @@ d3.json("{{url_for('static', filename='utah.json')}}", function(data){
     var c3transx = tblw/3 + 185// ( bscale * .95 ) // adjusting for the scale plus give a little buffer
     var c3transy = -cy * c3scale + 15 // adjusting for the scale plus give a little buffer
 
-    csvg = tcanvas.append("svg")
+    cg = tcanvas.append("g")
+                .classed("zoomedOut",true)
+                .classed("notAppearing",true)
+    csvg = cg.append("svg")
                 .attr("x",cx)
                 .attr("y",cy)
                 .attr("width",cw)
@@ -219,7 +229,7 @@ d3.json("{{url_for('static', filename='utah.json')}}", function(data){
                 .classed("zoomedOut",true)
                 .classed("notAppearing",true)
                 .on("click",function(d){
-                                        transformIt(d3.select(this),c3transx,c3transy,c3scale,c3scale);
+                                        transformIt(cg,c3transx,c3transy,c3scale,c3scale);
                                         tblAppearance(dsvg,dData);
                                     })
 

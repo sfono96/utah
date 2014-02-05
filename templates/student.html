@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<HTML>
+<head>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+<link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+<script type="text/javascript" src="{{url_for('static', filename='d3.v3.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='d3.tip.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='dimple.v1.1.2.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='jquery-1.9.1.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='jquery-ui.js')}}"></script>
+<link rel="stylesheet" href="{{url_for('static', filename='jquery-ui.css')}}"></script>
+<script src="/static/studentHelper.js" charset="utf-8"></script>
+<script type="text/javascript" src="{{url_for('static', filename='studentHelper.js')}}"></script>
+<style type="text/css">
+.axis {font-family: Roboto,Arial}
+.axis path, .axis line {fill: none;stroke: #000;shape-rendering: crispEdges;}
+.line {fill: none;stroke: steelblue;stroke-width: 2.5px;}
+.distribution {fill: none;stroke: lightgrey;stroke-width: 2.0px;}
+</style>
+<title>d3 chart practice</title>
+<div style = "float: left; position:relative;width:100%;height: 10px"></div>
+<div style = "float: left; position:relative;width:100%;background: black;height: 5px"></div>
+<div style = "float: left; position:relative;width:100%;background: black;height: 25px; font-family: arial,helvetica,sans-serif; color: white; font-size: 20px; text-indent: 100px;">Title III Tracking - State of Utah<a href='/logout' style="font-family: roboto; font-size: 10px;color: white; float:right; margin: 5px 10px 0px 0px">logout</a></div>
+<div style = "float: left; position:relative;width:100%;background: black;height: 5px"></div>
+<div style = "float: left; position:relative;width:100%;background: white;height: 25px"/></div>
+</head>
+<body>
+<div id="filters" style="float: left; font-family: Roboto, Arial; margin: 50px 50px 0px 0px">
+    <input type="checkbox" value="ualpa" onchange="clickIt()"><label>&nbspUALPA</label></input><br>
+    <input type="checkbox" value="crtla" onclick="clickIt()"><label>&nbspCRT-LA</label></input><br>
+    <input type="checkbox" value="crtma" onclick="clickIt()"><label>&nbspCRT-MA</label></input><br>
+    <input type="checkbox" value="grades" onclick="clickIt()"><label>&nbspGrades</label></input><br>
+    <input type="checkbox" value="attendance" onclick="clickIt()"><label>&nbspAttendance</label></input><br>
+</div>
+<script type="text/javascript">
+// useful links: https://groups.google.com/forum/#!topic/d3-js/YyXtm2GXfdk
+// http://bl.ocks.org/mbostock/1166403
+// http://bost.ocks.org/mike/path/
+// http://bl.ocks.org/mbostock/1166403
+
+//// functions ////
+// chart drawer (non existing to existing)
+// chart eraser (existing to nonexisting)
+// chart transitioner (existing to new position/scale)
+// get data for each student (probably on initial load)
+
+// dimensions
+var margins = {top: 30, bottom: 30, left: 50, right: 50},
+    width = 900, height = 600;
+
+// main chart canvas
+motherShip = d3.select("body").append("svg").attr("height",height).attr("width",width);
+motherShip.append("rect").attr("height",height).attr("width",width).attr("fill","none").attr("stroke","black");
+
+// // data
+var data = [
+    [{"x":2011,"y":2},{"x":2012,"y":2},{"x":2013,"y":3}],
+    [{"x":2011,"y":1.5},{"x":2012,"y":1.7},{"x":2013,"y":2.5}],
+    [{"x":2011,"y":2.2},{"x":2012,"y":2.2},{"x":2013,"y":3.2}],
+    [{"x":2011,"y":0.8},{"x":2012,"y":1.2},{"x":2013,"y":1.8}]
+]
+
+var data2 = [
+    [{"x":2011,"y":3},{"x":2012,"y":4},{"x":2013,"y":5}],
+    [{"x":2011,"y":1.5},{"x":2012,"y":1.7},{"x":2013,"y":2.5}],
+    [{"x":2011,"y":2.2},{"x":2012,"y":2.2},{"x":2013,"y":3.2}],
+    [{"x":2011,"y":0.8},{"x":2012,"y":1.2},{"x":2013,"y":1.8}]
+]
+
+// master x axis
+xScale = d3.scale.ordinal().domain([2011,2012,2013]).rangeBands([margins.left,width-margins.right])
+xAxis = d3.svg.axis().scale(xScale).orient("top")
+motherShip.append("g").attr("class","x axis").attr("transform","translate(0,"+(margins.top)+")").call(xAxis); 
+
+// chart objects and default (height will change as new charts included)
+ualpa = {}, crtla = {}, crtma = {}, attendance = {}, grades = {};
+ualpa.dataObj = data, ualpa.chartHeight = height, ualpa.chartWidth = width, ualpa.yDomain = [0,5], ualpa.yAxisTickCount = 5, ualpa.margins = margins, ualpa.yPos = 0;
+crtla.dataObj = data2, crtla.chartHeight = height, crtla.chartWidth = width, crtla.yDomain = [0,5], crtla.yAxisTickCount = 5, crtla.margins = margins, crtla.yPos = 300;
+crtma.dataObj = data, crtma.chartHeight = height, crtma.chartWidth = width, crtma.yDomain = [0,5], crtma.yAxisTickCount = 5, crtma.margins = margins, crtma.yPos = 0;
+attendance.dataObj = data, attendance.chartHeight = height, attendance.chartWidth = width, attendance.yDomain = [0,5], attendance.yAxisTickCount = 5, attendance.margins = margins,attendance.yPos = 0;
+grades.dataObj = data, grades.chartHeight = height, grades.chartWidth = width, grades.yDomain = [0,5], grades.yAxisTickCount = 5, grades.margins = margins, grades.yPos = 0;
+// draw the chart with these params (chartHeight,chartWidth,chartYDomain,yAxisTickCount,dataObj,chartName,margins,yScale,xScale,yAxis,xAxis,line)
+//drawLineChart(height,width,[0,5],5,data,canvas,margins,canvasY,canvasX,canvasYAxis,canvasXAxis,canvasLine);
+//drawLineChart(ualpa);
+
+// transition function
+var big = true, oldChecked = checkItOut();
+function clickIt(){
+    
+    var newChecked = checkItOut() // get latest checklist    
+    var leaving = getOut(oldChecked,newChecked) // who is leaving
+    var transitioning = scootOver(oldChecked,newChecked) // who is transitioning
+    var incoming = getIn(oldChecked,newChecked) // who is coming
+    console.log(leaving,transitioning,incoming)
+    oldChecked = newChecked // new is now old (for next run)
+    
+    // get rid of oldies
+    kickingThemOut(leaving)
+
+    // transition the stayers to their spots but keeping in mind where the new ones are (in order)
+    scootingThemOver(transitioning,newChecked)
+
+    // draw new ones
+    var temp = {"ualpa":ualpa,"crtla":crtla,"crtma":crtma,"grades":grades,"attendance":attendance}, i;
+    for(i=0;i<incoming.length;i++){
+        var chart = temp[incoming[i]];
+        console.log(chart,i);
+        if(newChecked.length>0){chart.chartHeight = height/newChecked.length}
+        if(typeof chart.chartName === undefined){chart.yPos = newChecked.indexOf(incoming[i])*(height/newChecked.length); console.log("undefined")}
+        //chart.yPos = height/newChecked.length*newChecked.indexOf(incoming[i])
+        setTimeout(function(){return drawLineChart(chart);},700) // stall the rendering
+    }
+    //scootingThemOver(incoming,newChecked)
+    // var newHeight
+    // if(big){
+    //     newHeight = height/2-margins.bottom
+    //     big = false
+    // } else {
+    //     newHeight = height-margins.bottom
+    //     big = true
+    // }
+
+    // // change the scale of the y axis
+    // chartObj.yScale.range([newHeight,margins.top])
+
+    // // set the transition of the mother svg and (with associated "g" variable)
+    // var t = chartObj.chartName.transition().duration(700);   
+    
+    // // handle the axis and line redraws
+    // t.select(".y.axis").call(chartObj.yAxis)
+    // t.select(".x.axis").attr("transform","translate(0,"+newHeight+")").call(chartObj.xAxis);
+    // t.select(".line").attr("d",function(d,i){return chartObj.line(d);})
+    // t.selectAll(".distribution").attr("d",function(d,i){return chartObj.line(d);})
+    // t.selectAll("circle").attr("cx",function(d,i,j){if(j===0){return chartObj.xScale(d.x);}}).attr("cy",function(d,i,j){if(j===0){return chartObj.yScale(d.y);}})
+}
+
+//// on click ////
+// get old checked list
+// get current checked list
+// get new number of charts needed
+// set order of current checked list (for each in order list if not in current checked list then get rid of)
+// for each in old list if not in current list call eraser - CHART ERASER
+// for each in old list and current list call transitioner - CHART TRANSITIONER
+// for each in current list if not in old list call drawer - CHART DRAWER
+
+</script>
+</body>
+</HTML>    
